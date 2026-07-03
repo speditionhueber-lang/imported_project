@@ -1,0 +1,381 @@
+
+{
+  "entities": {
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
+      "type": "object",
+      "description": "Represents a customer in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the customer."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the customer."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the customer.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the customer."
+        },
+        "address": {
+          "type": "string",
+          "description": "The address of the customer."
+        },
+        "nameLower": {
+          "type": "string",
+          "description": "Lowercased version of the customer's name for searching."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the customer was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "createdAt"
+      ]
+    },
+    "Job": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Job",
+      "type": "object",
+      "description": "Represents a job scheduled for a customer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the job."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to Customer. (Relationship: Customer 1:N Job)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the job (draft, scheduled, done)."
+        },
+        "scheduledAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the job is scheduled to occur.",
+          "format": "date-time"
+        },
+        "address": {
+          "type": "string",
+          "description": "The address where the job will take place."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes related to the job."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the job was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "status",
+        "createdAt"
+      ]
+    },
+    "Invoice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Invoice",
+      "type": "object",
+      "description": "Represents an invoice for a specific job.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the invoice."
+        },
+        "jobId": {
+          "type": "string",
+          "description": "Reference to Job. (Relationship: Job 1:N Invoice)"
+        },
+        "netTotal": {
+          "type": "number",
+          "description": "The net total amount of the invoice."
+        },
+        "vatRate": {
+          "type": "number",
+          "description": "The VAT rate applied to the invoice."
+        },
+        "paid": {
+          "type": "boolean",
+          "description": "Indicates whether the invoice has been paid."
+        },
+        "issuedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the invoice was issued.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "jobId",
+        "netTotal",
+        "vatRate",
+        "paid",
+        "issuedAt"
+      ]
+    },
+    "Employee": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Employee",
+      "type": "object",
+      "description": "Represents an employee in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the employee."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the employee."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the employee.",
+          "format": "email"
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL of the employee's avatar image."
+        },
+        "licenses": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["LKW", "Auto", "Motorrad"] },
+          "description": "List of driving licenses the employee holds."
+        },
+        "employmentType": {
+          "type": "string",
+          "enum": ["Vollzeit", "Teilzeit", "Geringfügig"],
+          "description": "Type of employment."
+        },
+        "hourlyWage": {
+          "type": "number",
+          "description": "The employee's hourly wage."
+        },
+        "contractedHours": {
+          "type": "number",
+          "description": "Contracted monthly working hours."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Arbeiter", "Büro", "Geschäftsführer", "IT Admin", "Steuerberater"],
+          "description": "The role of the employee in the company."
+        },
+        "skills": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of employee's skills."
+        }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "ScannedInvoice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Scanned Invoice",
+      "type": "object",
+      "description": "Represents a scanned invoice image and its extracted data.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the scanned invoice."
+        },
+        "imageDataUrl": {
+          "type": "string",
+          "description": "The scanned image as a Base64 data URI. For performance, consider storing in Firebase Storage."
+        },
+        "capturedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the invoice was captured."
+        },
+        "extractedData": {
+          "type": "object",
+          "description": "Structured data extracted from the invoice by AI.",
+          "properties": {
+            "vendorName": { "type": "string" },
+            "invoiceDate": { "type": "string" },
+            "invoiceNumber": { "type": "string" },
+            "grossAmount": { "type": "number" }
+          }
+        }
+      },
+      "required": ["id", "imageDataUrl", "capturedAt"]
+    },
+    "Todo": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Todo Item",
+      "type": "object",
+      "description": "Represents a single task in a to-do list.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the todo item."
+        },
+        "task": {
+          "type": "string",
+          "description": "The description of the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the task is completed."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indicating when the todo was created."
+        }
+      },
+      "required": ["id", "task", "completed", "createdAt"]
+    },
+    "TodoList": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Todo List",
+        "type": "object",
+        "description": "Represents a container for a list of to-do items.",
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier for the to-do list." },
+          "title": { "type": "string", "description": "The title of the to-do list." },
+          "color": { "type": "string", "description": "A Tailwind CSS class for the background color." },
+          "owner": { "type": "string", "description": "The UID of the user who owns the list." },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp indicating when the list was created." }
+        },
+        "required": ["id", "title", "owner", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer data. Includes 'customerId' as the document ID and 'nameLower' for prefix-based searching.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "Unique identifier for the customer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/jobs/{jobId}",
+        "definition": {
+          "entityName": "Job",
+          "schema": {
+            "$ref": "#/backend/entities/Job"
+          },
+          "description": "Stores job data, associated with a customer via 'customerId'.",
+          "params": [
+            {
+              "name": "jobId",
+              "description": "Unique identifier for the job."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/invoices/{invoiceId}",
+        "definition": {
+          "entityName": "Invoice",
+          "schema": {
+            "$ref": "#/backend/entities/Invoice"
+          },
+          "description": "Stores invoice data, associated with a job via 'jobId'.",
+          "params": [
+            {
+              "name": "invoiceId",
+              "description": "Unique identifier for the invoice."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/workers/{workerId}",
+        "definition": {
+          "entityName": "Employee",
+          "schema": {
+            "$ref": "#/backend/entities/Employee"
+          },
+          "description": "Stores employee data.",
+          "params": [
+            {
+              "name": "workerId",
+              "description": "Unique identifier for the employee."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/scannedInvoices/{invoiceId}",
+        "definition": {
+          "entityName": "ScannedInvoice",
+          "schema": {
+            "$ref": "#/backend/entities/ScannedInvoice"
+          },
+          "description": "Stores scanned invoice images and their AI-extracted data.",
+          "params": [
+            {
+              "name": "invoiceId",
+              "description": "Unique identifier for the scanned invoice."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/todoLists/{listId}",
+        "definition": {
+          "entityName": "TodoList",
+          "schema": {
+            "$ref": "#/backend/entities/TodoList"
+          },
+          "description": "Stores to-do list metadata.",
+          "params": [
+            {
+              "name": "listId",
+              "description": "Unique identifier for the to-do list."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/todoLists/{listId}/todos/{todoId}",
+        "definition": {
+          "entityName": "Todo",
+          "schema": {
+            "$ref": "#/backend/entities/Todo"
+          },
+          "description": "Stores individual to-do items for a specific list.",
+          "params": [
+            { "name": "listId", "description": "ID of the parent to-do list." },
+            { "name": "todoId", "description": "Unique identifier for the to-do item." }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to manage customer, job, and invoice data while ensuring robust security and efficient querying. It leverages path-based ownership for user-related data and employs denormalization to maintain authorization independence. The structure is segregated to ensure homogeneous security postures within each collection. Specifically, customer, job, and invoice data are stored in their respective collections: `/customers`, `/jobs`, and `/invoices`. Jobs are linked to Customers via the `customerId` field within the `jobs` documents. Invoices are linked to Jobs via the `jobId` field within the `invoices` document. This structure facilitates secure `list` operations and supports the integrity of ownership, timestamps, and denormalized data. Prefix searches are supported via the `nameLower` field in the `/customers` collection. Employee data is stored in the `/workers` collection. Scanned invoices are stored in `/scannedInvoices`. To-do lists are stored in the `/todoLists` collection, with individual to-do items in a subcollection for better organization."
+  }
+}
