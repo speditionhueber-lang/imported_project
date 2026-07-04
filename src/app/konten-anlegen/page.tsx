@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, FileUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { extractCustomerData } from '@/actions/extract-customer-data';
-import type { ExtractedCustomerData } from '@/ai/flows/extract-customer-data-flow';
 import NewCustomerWizard from '@/components/customers/new-customer-wizard';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
