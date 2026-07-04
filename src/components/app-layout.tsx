@@ -66,7 +66,7 @@ import {
 import { useRole } from '@/contexts/role-context';
 import { useCustomer } from '@/contexts/customer-context';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Badge } from './ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useOffer } from '@/contexts/offer-context';
 import JSZip from 'jszip';
