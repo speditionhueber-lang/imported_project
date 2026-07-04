@@ -32,29 +32,6 @@ const camelToTitle = (camelCase: string) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
-async function sendNotification(userId: string, job: Job) {
-    try {
-        const response = await fetch('/api/notifications', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: userId, // The API expects userId, which we are using email for
-                jobId: job.id,
-                title: `Neuer Auftrag: ${job.customerName}`,
-                description: `Umzug von ${job.abholadresse?.strasse || 'Unbekannt'} nach ${job.zieladresse?.strasse || 'Unbekannt'}`,
-                location: 'Hueber App Zentrale',
-            }),
-        });
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error('Failed to send notification:', response.statusText, errorBody);
-        }
-    } catch (error) {
-        console.error('Error sending notification:', error);
-    }
-}
-
-
 export default function LieferscheinPage() {
   const { selectedCustomer: globalCustomer, setCustomerState, jobForLieferschein, calendarEvents, customerStates } = useCustomer();
   const router = useRouter();
@@ -188,7 +165,7 @@ export default function LieferscheinPage() {
     }
   }, [finalJob, localCustomer, globalCustomer]);
 
-  const handlePrintAndNotify = () => {
+  const handleSaveAndContinue = () => {
     const customerForPdf = localCustomer || globalCustomer;
     if (!customerForPdf) {
       toast({
@@ -228,7 +205,6 @@ export default function LieferscheinPage() {
         
       generateLieferscheinPDF(mockCustomer, mockJob, gegenstaende, workers, note, logoBase64, 'save', docNumber, totalM3, startTime, endTime);
 
-      // --- Notification Logic ---
       const eventStart = newScheduledDate;
       const [endH, endM] = endTime.split(':').map(Number);
       const eventEnd = new Date(newScheduledDate);
@@ -246,16 +222,6 @@ export default function LieferscheinPage() {
 
         const otherEvents = (calendarEvents || []).filter(e => !e.id.startsWith(`evt_${mockJob.id}`));
         
-        if (employees) {
-            workers.forEach(workerName => {
-                const worker = employees.find(e => e.name === workerName);
-                if (worker && worker.email) {
-                    console.log(`Sending notification to ${worker.email} for job ${mockJob.id}`);
-                    sendNotification(worker.email, mockJob);
-                }
-            });
-        }
-        
        setCustomerState(customerForPdf.id, {
            jobForLieferschein: mockJob,
            allocationsForJob: mockJob.allocations,
@@ -267,8 +233,8 @@ export default function LieferscheinPage() {
        })
 
        toast({
-        title: "Benachrichtigungen gesendet & Lieferschein erstellt",
-        description: "Die Mitarbeiter wurden informiert und das PDF wurde gespeichert."
+        title: "Lieferschein erstellt",
+        description: "Das PDF wurde gespeichert."
       });
 
        router.push('/rechnung-erstellen');
@@ -329,9 +295,9 @@ export default function LieferscheinPage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Button onClick={handlePrintAndNotify} disabled={!pageCustomer || !logoBase64}>
+            <Button onClick={handleSaveAndContinue} disabled={!pageCustomer || !logoBase64}>
                 <Printer className="mr-2 h-4 w-4" />
-                Speichern, Benachrichtigen & Weiter
+                Speichern & Weiter
             </Button>
         </div>
         

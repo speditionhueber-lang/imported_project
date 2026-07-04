@@ -32,29 +32,6 @@ const camelToTitle = (camelCase: string) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
-async function sendNotification(userId: string, job: Job) {
-    try {
-        const response = await fetch('/api/notifications', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: userId, // The API expects userId, which we are using email for
-                jobId: job.id,
-                title: `Neuer Auftrag: ${job.customerName}`,
-                description: `Umzug von ${job.abholadresse?.strasse || 'Unbekannt'} nach ${job.zieladresse?.strasse || 'Unbekannt'}`,
-                location: 'Hueber App Zentrale',
-            }),
-        });
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error('Failed to send notification:', response.statusText, errorBody);
-        }
-    } catch (error) {
-        console.error('Error sending notification:', error);
-    }
-}
-
-
 export default function LieferscheinAendernPage() {
   const { selectedCustomer: globalCustomer, setSelectedCustomer, customerStates, calendarEvents, setCustomerState } = useCustomer();
   const router = useRouter();
@@ -141,7 +118,7 @@ export default function LieferscheinAendernPage() {
     }
   }, [pageCustomer, customerStates]);
 
-  const handlePrintAndNotify = () => {
+  const handleSave = () => {
     if (!pageCustomer) {
       toast({
         variant: "destructive",
@@ -203,23 +180,13 @@ export default function LieferscheinAendernPage() {
 
         const otherEvents = (calendarEvents || []).filter(e => !e.id.startsWith(`evt_${mockJob.id}`));
         
-        if (employees) {
-            workers.forEach(workerName => {
-                const worker = employees.find(e => e.name === workerName);
-                if (worker && worker.email) {
-                    console.log(`Sending notification to ${worker.email} for job ${mockJob.id}`);
-                    sendNotification(worker.email, mockJob);
-                }
-            });
-        }
-        
        setCustomerState(pageCustomer.id, {
            calendarEvents: [...otherEvents, newEvent],
        })
 
        toast({
-        title: "Benachrichtigungen gesendet & Lieferschein erstellt",
-        description: "Die Mitarbeiter wurden informiert und das PDF wurde gespeichert."
+        title: "Lieferschein erstellt",
+        description: "Das PDF wurde gespeichert."
       });
 
        router.push('/calendar');
@@ -295,9 +262,9 @@ export default function LieferscheinAendernPage() {
             <div className="flex gap-4 items-center">
               <h1 className="text-2xl font-bold">Lieferschein für {pageCustomer.name}</h1>
             </div>
-            <Button onClick={handlePrintAndNotify} disabled={!pageCustomer || !logoBase64}>
+            <Button onClick={handleSave} disabled={!pageCustomer || !logoBase64}>
                 <Printer className="mr-2 h-4 w-4" />
-                Speichern & Benachrichtigen
+                Speichern
             </Button>
         </div>
         
