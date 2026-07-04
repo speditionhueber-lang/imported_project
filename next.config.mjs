@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-
   optimizeFonts: false,
 
   webpack: (config, { isServer }) => {
@@ -15,8 +14,7 @@ const nextConfig = {
       };
     }
 
-    config.externals.push('gaxios');
-    config.externals.push('googleapis');
+    config.externals.push("gaxios", "googleapis");
 
     return config;
   },
