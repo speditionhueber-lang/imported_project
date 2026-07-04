@@ -3,7 +3,7 @@
 
 import { collection, writeBatch, doc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
-import type { ExtractedInvoiceData } from '@/ai/flows/extract-invoice-data-flow';
+type ExtractedInvoiceData = any;
 
 type CapturedInvoice = {
   id: string;
