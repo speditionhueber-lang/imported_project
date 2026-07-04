@@ -6,7 +6,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback, use
 import type { OfferItem } from './offer-context';
 import { customers as staticCustomers } from '@/lib/data';
 import { importedCustomers } from '@/lib/imported-data';
-import { type CalendarEvent } from '@/app/calendar/page';
+import { type CalendarEvent } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAllCustomers } from '@/hooks/use-all-customers';
 import { useClientState } from '@/hooks/use-client-state';
@@ -102,9 +102,6 @@ interface CustomerContextType {
   createNewJobForCustomer: (customerId: string) => void;
   archiveCustomer: (customerId: string) => void;
   setNotificationState: (eventId: string, status: 'seen') => void;
-  getNewEventCount: () => number;
-  getApprovalCount: () => number;
-  getPendingJobCount: () => number;
   // For convenience, we expose the current customer's state directly
   highlightedNav: Record<string, NavStatus>;
   jobCreationData: JobCreationData | null;
@@ -319,35 +316,6 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   }, [setCustomerState, selectedCustomer, setSelectedCustomerId]);
 
 
-  const getNewEventCount = useCallback(() => {
-    return Object.values(customerStates).reduce((count, state) => count + (state.newCalendarEvents?.length || 0), 0);
-  }, [customerStates]);
-
-  const getApprovalCount = useCallback(() => {
-    return Object.values(customerStates).filter(state => 
-        state.pendingApproval || 
-        state.pendingInvoiceApproval || 
-        state.pendingChangeSuggestion ||
-        state.needsMorePersonnel ||
-        state.incorrectJobDetails ||
-        state.messageToOffice
-    ).length;
-  }, [customerStates]);
-
-  const getPendingJobCount = useCallback(() => {
-    // This is a simplified logic. In a real app, you'd filter jobs assigned to the current user.
-    const allJobs = Object.values(customerStates).flatMap(state => state.jobs || []);
-    // For now, let's just use the first 3 jobs as a demo for assigned jobs
-    const assignedJobs = allJobs.slice(0, 3); 
-    
-    // Get all accepted jobs across all customers
-    const allAcceptedJobs = Object.values(customerStates).flatMap(state => state.acceptedJobs || []);
-
-    const pendingJobs = assignedJobs.filter(job => !allAcceptedJobs.includes(job.id));
-    return pendingJobs.length;
-  }, [customerStates]);
-
-
   const handleSetSelectedCustomer = useCallback((customer: Customer | null) => {
     setIsNewCustomerMode(false); // Always exit new customer mode when a customer is selected
     setSelectedCustomerId(customer ? customer.id : null);
@@ -374,9 +342,6 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     createNewJobForCustomer,
     archiveCustomer,
     setNotificationState,
-    getNewEventCount,
-    getApprovalCount,
-    getPendingJobCount,
     isNewCustomerMode,
     setIsNewCustomerMode,
     NEW_CUSTOMER_STATE_ID,

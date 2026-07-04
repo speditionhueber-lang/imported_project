@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import type { CalendarEvent } from '@/app/calendar/page';
+import type { CalendarEvent } from '@/lib/types';
 import { format, isSameDay, startOfTomorrow, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';

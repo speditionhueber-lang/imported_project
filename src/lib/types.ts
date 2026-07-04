@@ -299,3 +299,15 @@ export type Invoice = {
 };
 
 export type UserRole = 'admin' | 'staff' | 'Arbeiter' | 'Büro' | 'Geschäftsführer' | 'IT Admin' | 'Steuerberater';
+
+export type CalendarEvent = {
+  id: string;
+  start: Date;
+  end: Date;
+  title: string;
+  description: string;
+  allDay?: boolean;
+  vehicles?: string[];
+  workers?: string[];
+  amount?: number;
+};

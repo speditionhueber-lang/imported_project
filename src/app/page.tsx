@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, DragEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { PlusCircle, X, Calendar, Phone, Users, Landmark, FileWarning, CheckCircle, Upload, LayoutDashboard, Calculator, PenSquare, Briefcase, CalendarCheck, Truck, FileText, RefreshCw, Smartphone, BookOpen, Lightbulb, FolderClock, Newspaper, Loader2, Search, KeyRound, MinusCircle, Grid, Expand, Shrink, ListTodo } from 'lucide-react';
+import { PlusCircle, X, Calendar, Users, LayoutDashboard, Calculator, PenSquare, Briefcase, CalendarCheck, Truck, FileText, RefreshCw, Lightbulb, Loader2, MinusCircle, Grid, Expand, ListTodo } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
 import AuthPanel from '@/components/auth/auth-panel';
@@ -16,16 +16,15 @@ import Approvals from '@/components/dashboard/approvals';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomer } from '@/contexts/customer-context';
-import type { CalendarEvent } from '@/app/calendar/page';
+import type { CalendarEvent } from '@/lib/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import TodoList from '@/components/dashboard/todo-list';
 
 type WidgetType = 
-    | 'calendar' | 'telefonate' | 'mitarbeiter' | 'finanzen' 
-    | 'unbezahlte-rechnungen' | 'abgeschlossene-auftraege' | 'rechnungen-hochladen'
+    | 'calendar'
     | 'kunden' | 'berechnung' | 'angebot' | 'auftraege' | 'einteilung' | 'lieferschein' 
-    | 'rechnungen' | 'storno-rechnungen' | 'dokumente' | 'anleitung' | 'anleitung-android'
-    | 'aenderungsvorschlaege' | 'neuigkeiten' | 'besichtigungen' | 'todo-list';
+    | 'rechnungen' | 'storno-rechnungen'
+    | 'aenderungsvorschlaege' | 'neuigkeiten' | 'todo-list';
 
 type WidgetSize = '1x1' | '2x1' | '1x2' | '2x2';
 
@@ -36,15 +35,8 @@ interface WidgetConfig {
 
 
 const widgetConfig = {
-    'rechnungen-hochladen': { label: 'Rechnung einscannen', icon: Upload, type: 'link', href: '/rechnungen-hochladen' },
-    'besichtigungen': { label: 'Besichtigung starten', icon: Search, type: 'link', href: '/besichtigungen'},
-    'neuigkeiten': { label: 'Neuigkeiten & Genehmigungen', icon: Newspaper, type: 'widget' },
+    'neuigkeiten': { label: 'Neuigkeiten & Genehmigungen', icon: Calendar, type: 'widget' },
     'calendar': { label: 'Kalender', icon: Calendar, type: 'widget' },
-    'telefonate': { label: 'Telefonate', icon: Phone, type: 'link', href: '/telefonate' },
-    'mitarbeiter': { label: 'Mitarbeiter', icon: Users, type: 'link', href: '/mitarbeiter' },
-    'finanzen': { label: 'Finanzen', icon: Landmark, type: 'link', href: '/finanzen' },
-    'unbezahlte-rechnungen': { label: 'Unbezahlte Rechnungen', icon: FileWarning, type: 'link', href: '/unbezahlte-rechnungen' },
-    'abgeschlossene-auftraege': { label: 'Abgeschlossene Aufträge', icon: CheckCircle, type: 'link', href: '/abgeschlossene-auftraege' },
     'kunden': { label: 'Kunden', icon: Users, type: 'link', href: '/customers' },
     'berechnung': { label: 'Berechnung', icon: Calculator, type: 'link', href: '/berechnung' },
     'angebot': { label: 'Anzahlung Rechnung', icon: PenSquare, type: 'link', href: '/angebot' },
@@ -53,10 +45,6 @@ const widgetConfig = {
     'lieferschein': { label: 'Lieferschein', icon: Truck, type: 'link', href: '/lieferschein' }, 
     'rechnungen': { label: 'Rechnungen', icon: FileText, type: 'link', href: '/invoices' },
     'storno-rechnungen': { label: 'Storno-Rechnungen', icon: RefreshCw, type: 'link', href: '/storno-rechnungen' },
-    'dokumente': { label: 'Dokumente', icon: FolderClock, type: 'link', href: '/dokumente' },
-    'anleitung': { label: 'Anleitung', icon: BookOpen, type: 'link', href: '/anleitung' },
-    'anleitung-android': { label: 'Android Anleitung', icon: Smartphone, type: 'link', href: '/anleitung-android' },
-    'anleitung-azure': { label: 'Azure Anleitung', icon: KeyRound, type: 'link', href: '/anleitung-azure'},
     'aenderungsvorschlaege': { label: 'Änderungsvorschläge', icon: Lightbulb, type: 'link', href: '/aenderungsvorschlaege' },
     'todo-list': { label: 'To-Do Listen', icon: ListTodo, type: 'widget' },
 };
@@ -66,10 +54,7 @@ const WidgetPlaceholder = ({ id, events, isMobile }: { id: WidgetType; events?: 
     if (!config) return null;
     const Icon = config.icon;
     
-    let href = ('href' in config) ? config.href : '/';
-    if (id === 'rechnungen-hochladen' && isMobile) {
-        href += '?openCamera=true';
-    }
+    const href = ('href' in config) ? config.href : '/';
 
     if (config.type === 'link') {
         return (
@@ -122,9 +107,8 @@ export default function DashboardPage() {
                 // Default widgets
                 setWidgets([
                     { id: 'todo-list', size: '2x2' },
-                    { id: 'rechnungen-hochladen', size: '1x1' },
-                    { id: 'besichtigungen', size: '1x1' },
                     { id: 'calendar', size: '2x1' },
+                    { id: 'neuigkeiten', size: '1x1' },
                 ]);
             }
         } catch (error) {
@@ -132,9 +116,8 @@ export default function DashboardPage() {
             // Fallback to default if parsing fails
              setWidgets([
                 { id: 'todo-list', size: '2x2' },
-                { id: 'rechnungen-hochladen', size: '1x1' },
-                { id: 'besichtigungen', size: '1x1' },
                 { id: 'calendar', size: '2x1' },
+                { id: 'neuigkeiten', size: '1x1' },
             ]);
         }
     }, []);
