@@ -46,4 +46,4 @@ export async function saveScannedInvoices(
       error: e.message || 'An unknown error occurred during save.',
     };
   }
-
+}

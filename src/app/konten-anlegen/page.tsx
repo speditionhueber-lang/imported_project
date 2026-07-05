@@ -16,6 +16,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { extractCustomerData, type ExtractedCustomerData } from '@/app/actions';
 
 // Zod schema for client-side validation
 const ExtractCustomerDataInputSchema = z.object({

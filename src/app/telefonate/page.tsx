@@ -3,7 +3,8 @@ import { CustomerCallList } from '@/components/telefonate/folder-list';
 import { listFolders, listAudioFiles } from '@/lib/google-drive';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-import { getFolderName } from '@/lib/google-drive';
+
+export const dynamic = 'force-dynamic';
 
 type AudioFile = {
   id: string;
