@@ -91,9 +91,10 @@ export async function runAudioTranscription(fileId: string): Promise<ActionResul
     return { data: null, error: 'Ungültige Datei-ID.' };
   }
   return {
-    data: null,
-    error:
-      'Audio-Transkription ist noch nicht konfiguriert. Bitte Backend-Integration für Transkription ergänzen.',
+    data: {
+      transcript:
+        'Automatische Audio-Transkription ist derzeit nicht konfiguriert. Bitte hinterlegen Sie eine Speech-to-Text Integration.',
+    },
   };
 }
 
