@@ -1,0 +1,44 @@
+name: Verify AI Studio deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AZURE_AD_CLIENT_ID: build-placeholder
+      AZURE_AD_CLIENT_SECRET: build-placeholder
+      AZURE_AD_TENANT_ID: build-placeholder
+      NEXTAUTH_SECRET: build-placeholder
+      NEXTAUTH_URL: http://localhost:3000
+      GOOGLE_CLIENT_EMAIL: build@example.invalid
+      GOOGLE_PRIVATE_KEY: build-placeholder
+      GOOGLE_MAPS_API_KEY: build-placeholder
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production app
+        run: npm run build
+
+      - name: Verify standalone server output
+        run: test -f .next/standalone/server.js
