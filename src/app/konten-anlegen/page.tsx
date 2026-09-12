@@ -16,6 +16,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { extractCustomerData, type ExtractedCustomerData } from '@/app/actions';
 
 // Zod schema for client-side validation
 const ExtractCustomerDataInputSchema = z.object({
@@ -111,136 +112,90 @@ export default function KontenAnlegenPage() {
     };
 
     try {
-      const collectionRef = collection(firestore, 'customers');
-      await addDoc(collectionRef, dataToSave);
+      await addDoc(collection(firestore, 'customers'), dataToSave);
       toast({
         title: 'Kunde gespeichert',
-        description: 'Der neue Kunde wurde erfolgreich angelegt.',
+        description: `${dataToSave.name} wurde erfolgreich angelegt.`,
       });
-      setInputText('');
-      setStructuredInputText(customerTemplate);
-      setExtractedData(null);
-      router.push('/customers');
-    } catch (error) {
-      console.error('Error adding customer:', error);
+      router.push('/kunden');
+    } catch (serverError: any) {
       const permissionError = new FirestorePermissionError({
         path: 'customers',
         operation: 'create',
         requestResourceData: dataToSave,
       });
       errorEmitter.emit('permission-error', permissionError);
-      toast({
-        variant: 'destructive',
-        title: 'Speichern fehlgeschlagen',
-        description: 'Der Kunde konnte nicht gespeichert werden. Möglicherweise fehlen Berechtigungen.',
-      });
     }
   };
 
-  const initialWizardData = extractedData
-    ? {
-        name: extractedData.customerName,
-        email: extractedData.email,
-        phone: extractedData.phone,
-        billingAddressStreet: extractedData.billingAddressStreet,
-        billingAddressCityZip: extractedData.billingAddressCityZip,
-        billingAddressCountry: extractedData.billingAddressCountry,
-        umzugsdetails: {
-          gewuenschterUmzugstermin: extractedData.movingDate,
-        },
-        abholadresse: {
-          strasse: extractedData.pickupAddress,
-          stockwerk: extractedData.pickupFloor,
-          aufzug: extractedData.pickupElevator,
-          entfernungLKW: extractedData.pickupDistanceToTruck,
-        },
-        zieladresse: {
-          strasse: extractedData.deliveryAddress,
-          stockwerk: extractedData.deliveryFloor,
-          aufzug: extractedData.deliveryElevator,
-          entfernungLKW: extractedData.deliveryDistanceToTruck,
-        },
-        gegenstaende: extractedData.gegenstaende, // Pass the array of objects
-        anmerkungen: extractedData.notes,
-        unmatchedItems: '', // This logic is now handled inside the wizard or on save
-      }
-    : null;
-
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Neuen Kunden aus Text anlegen</CardTitle>
-          <CardDescription>
-            Fügen Sie einen beliebigen Text (z.B. aus einer E-Mail oder Notiz) in das Feld ein. Die KI
-            extrahiert die relevanten Kundendaten automatisch.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="z.B. E-Mail-Inhalt oder Notizen hier einfügen..."
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            rows={10}
-          />
-        </CardContent>
-        <CardFooter>
-          <Button onClick={() => handleExtract(inputText)} disabled={isExtracting || !inputText.trim()}>
-            {isExtracting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <FileUp className="mr-2 h-4 w-4" />
-            )}
-            Freitext analysieren &amp; Kunde erstellen
-          </Button>
-        </CardFooter>
-      </Card>
-      
-      <div className="relative flex items-center">
-        <Separator className="flex-grow" />
-        <span className="mx-4 text-muted-foreground font-semibold">ODER</span>
-        <Separator className="flex-grow" />
+    <div className="space-y-6 p-4 md:p-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Konto anlegen</h1>
+        <p className="text-muted-foreground">
+          Kundendaten aus Text übernehmen und als neues Kundenkonto speichern.
+        </p>
       </div>
 
       <Card>
         <CardHeader>
-            <CardTitle>Strukturierte Eingabe</CardTitle>
-            <CardDescription>Füllen Sie die Vorlage mit den bekannten Kundendaten aus.</CardDescription>
+          <CardTitle>Freitext auswerten</CardTitle>
+          <CardDescription>
+            Fügen Sie eine Anfrage oder Gesprächsnotiz ein. Die erkannten Felder können anschließend kontrolliert werden.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-            <Textarea
-                placeholder="Vorlage für Kundendaten..."
-                value={structuredInputText}
-                onChange={(e) => setStructuredInputText(e.target.value)}
-                rows={15}
-                className="font-mono text-sm"
-            />
+        <CardContent className="space-y-4">
+          <Textarea
+            value={inputText}
+            onChange={(event) => setInputText(event.target.value)}
+            placeholder="Kundenanfrage hier einfügen …"
+            className="min-h-[180px]"
+          />
         </CardContent>
         <CardFooter>
-            <Button onClick={() => handleExtract(structuredInputText)} disabled={isExtracting || structuredInputText === customerTemplate}>
-                {isExtracting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                <FileUp className="mr-2 h-4 w-4" />
-                )}
-                Vorlage analysieren &amp; Kunde erstellen
-            </Button>
+          <Button onClick={() => handleExtract(inputText)} disabled={isExtracting || !inputText.trim()}>
+            {isExtracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+            Daten erkennen
+          </Button>
         </CardFooter>
       </Card>
 
-      {initialWizardData && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Überprüfen und Speichern</CardTitle>
-            <CardDescription>
-              Bitte überprüfen Sie die von der KI extrahierten Daten und korrigieren oder ergänzen Sie sie
-              bei Bedarf.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <NewCustomerWizard onCustomerAdded={handleCustomerAdded} initialData={initialWizardData} />
-          </CardContent>
-        </Card>
+      <div className="flex items-center gap-4">
+        <Separator className="flex-1" />
+        <span className="text-sm text-muted-foreground">oder strukturiert erfassen</span>
+        <Separator className="flex-1" />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Strukturierte Eingabe</CardTitle>
+          <CardDescription>
+            Die Vorlage kann direkt ausgefüllt und anschließend übernommen werden.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Label htmlFor="structured-customer-input">Kundendaten</Label>
+          <Textarea
+            id="structured-customer-input"
+            value={structuredInputText}
+            onChange={(event) => setStructuredInputText(event.target.value)}
+            className="min-h-[360px] font-mono text-sm"
+          />
+        </CardContent>
+        <CardFooter>
+          <Button onClick={() => handleExtract(structuredInputText)} disabled={isExtracting || !structuredInputText.trim()}>
+            {isExtracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+            Vorlage übernehmen
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {extractedData && (
+        <NewCustomerWizard
+          initialData={extractedData}
+          onCustomerAdded={handleCustomerAdded}
+          trigger={<Button className="w-full">Erkannte Kundendaten prüfen und speichern</Button>}
+        />
       )}
     </div>
   );
